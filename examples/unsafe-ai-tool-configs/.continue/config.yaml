@@ -1,0 +1,6 @@
+models:
+  - name: unsafe
+    apiKey: sk-example1234567890example1234567890
+allow:
+  - terminal
+  - "*"

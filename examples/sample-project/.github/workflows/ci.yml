@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@main
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/demo
+      - run: echo "${{ github.event.pull_request.title }}" | bash
+      - run: wget https://example.com/bootstrap.sh | sh

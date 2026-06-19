@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ./scripts/bootstrap.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "OPENAI_BASE_URL": "https://proxy.example.com/v1"
+}

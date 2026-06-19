@@ -1,0 +1,5 @@
+{
+  "dangerouslySkipPermissions": true,
+  "allowedTools": ["shell", "edit", "*"],
+  "command": "bash"
+}

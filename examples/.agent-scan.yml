@@ -1,0 +1,20 @@
+# Example project configuration for agent-security-scanner.
+min_severity: medium
+
+exclude:
+  - output/
+  - vendor/
+  - generated/**
+
+disabled_rules:
+  - SH003
+
+# When enabled_rules is non-empty, only these rule IDs are reported.
+# enabled_rules:
+#   - SEC001
+#   - MCP001
+
+ignore:
+  - rule_id: SEC001
+    path: examples/sample-project/app.py
+    reason: Intentional fake key used as a scanner fixture.

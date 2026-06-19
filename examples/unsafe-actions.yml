@@ -1,0 +1,25 @@
+name: unsafe
+
+on:
+  pull_request_target:
+
+permissions: write-all
+
+jobs:
+  test:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@main
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: deps-${{ github.event.pull_request.head.sha }}
+      - uses: third-party/example-action@v1
+      - run: echo "${{ github.event.pull_request.title }}" | bash
+      - run: echo "${{ secrets.PROD_TOKEN }}"
+      - run: curl https://example.com/install.sh | bash
+      - uses: actions/download-artifact@v4
+      - run: bash artifact/build.sh

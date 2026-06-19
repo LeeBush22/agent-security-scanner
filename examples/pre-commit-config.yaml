@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: agent-security-scanner
+        name: Agent Security Scanner
+        entry: agent-scan . --fail-on high
+        language: system
+        pass_filenames: false
+        always_run: true
