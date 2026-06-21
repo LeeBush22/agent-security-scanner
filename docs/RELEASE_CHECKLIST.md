@@ -1,15 +1,15 @@
-# V1.0.0 Release Checklist
+# V1.0.1 Release Checklist
 
-Use this checklist before publishing Agent Security Scanner V1.0.0.
+Use this checklist before publishing Agent Security Scanner V1.0.1.
 
 ## Version
 
-- [ ] `pyproject.toml` version is `1.0.0`.
+- [ ] `pyproject.toml` version is `1.0.1`.
 - [ ] `pyproject.toml` package name is `agentsec-scanner` for PyPI publishing.
-- [ ] `src/agent_security_scanner/__init__.py` version is `1.0.0`.
+- [ ] `src/agent_security_scanner/__init__.py` version is `1.0.1`.
 - [ ] `pyproject.toml` package status is `Development Status :: 4 - Beta`.
 - [ ] `pyproject.toml` includes Homepage, Repository, Issues, and Documentation URLs.
-- [ ] README files describe the current V1.0.0 feature set.
+- [ ] README files describe the current V1.0.1 feature set.
 - [ ] Generated rule docs are up to date.
 
 ## Tests

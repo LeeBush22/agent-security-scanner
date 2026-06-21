@@ -116,6 +116,14 @@ TRANSLATIONS: dict[str, dict[Language, str]] = {
         Language.EN: "Example: press Enter to write reports to output.",
         Language.ZH: "直接回车将报告写入 output 目录。",
     },
+    "last_target_hint": {
+        Language.EN: "Press Enter to use the last scanned project directory.",
+        Language.ZH: "直接回车将使用上次扫描的项目目录。",
+    },
+    "report_scan_target": {
+        Language.EN: "Report scan target",
+        Language.ZH: "报告扫描目标",
+    },
     "category_filter": {Language.EN: "Category filter (optional)", Language.ZH: "分类过滤（可选）"},
     "category_filter_hint": {
         Language.EN: "Category filter: press Enter for all rules; or enter secrets, mcp, shell, github-actions, ai-tool, or supply-chain.",

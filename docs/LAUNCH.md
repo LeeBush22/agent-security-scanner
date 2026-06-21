@@ -1,14 +1,14 @@
 # Launch Kit
 
-Use this file when publishing Agent Security Scanner V1.0.0 on GitHub, social platforms, newsletters, or security communities.
+Use this file when publishing Agent Security Scanner V1.0.1 on GitHub, social platforms, newsletters, or security communities.
 
 ## GitHub Release Title
 
-Agent Security Scanner V1.0.0 - Local-first security scanning for AI Agent, MCP, and AI coding tool projects
+Agent Security Scanner V1.0.1 - Interactive report target fix
 
 ## GitHub Release Summary
 
-Agent Security Scanner is a local-first CLI security scanner for AI Agent, MCP, and AI coding tool projects. V1.0.0 includes 126 built-in rules across secrets, MCP, AI coding tools, shell commands, GitHub Actions, and supply-chain configuration.
+Agent Security Scanner V1.0.1 fixes an interactive CLI report-target issue. After scanning another directory, report generation now defaults to the last scanned project directory, so generated Markdown, Excel, PDF, and SARIF reports match the scan result shown in the terminal.
 
 Highlights:
 
@@ -23,9 +23,9 @@ Highlights:
 
 ## Short Announcement
 
-I just released Agent Security Scanner V1.0.0: a local-first CLI scanner for AI Agent, MCP, and AI coding tool projects.
+I just released Agent Security Scanner V1.0.1: a bugfix release for the local-first CLI scanner for AI Agent, MCP, and AI coding tool projects.
 
-It checks for risky tool permissions, plaintext AI provider keys, MCP config risks, suspicious shell commands, GitHub Actions automation risks, and supply-chain footguns. It outputs terminal, JSON, SARIF, Markdown, Excel, and PDF reports, with English and Chinese support.
+This release fixes interactive report generation after scanning another directory. Options 3 and 4 now default to the last scanned project directory, keeping terminal scan results and generated reports aligned.
 
 Repo: https://github.com/LeeBush22/agent-security-scanner
 
@@ -37,9 +37,9 @@ python -m pip install agentsec-scanner
 
 ## Chinese Announcement
 
-我发布了 Agent Security Scanner V1.0.0：一个本地优先的 AI Agent / MCP / AI 编程工具安全扫描器。
+我发布了 Agent Security Scanner V1.0.1：这是一个针对交互式 CLI 的修复版本。
 
-它可以扫描危险工具权限、明文 AI 服务商 API Key、MCP 配置风险、可疑 Shell 命令、GitHub Actions 自动化风险和供应链配置风险。支持终端、JSON、SARIF、Markdown、Excel、PDF 报告，并支持中英双语输出。
+本次修复了扫描其他目录后生成报告目标不一致的问题。现在选项 3 和选项 4 会默认使用上次扫描的项目目录，确保终端扫描结果和生成报告保持一致。
 
 仓库地址：https://github.com/LeeBush22/agent-security-scanner
 

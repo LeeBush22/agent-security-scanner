@@ -1,6 +1,6 @@
 # Agent Security Scanner
 
-**Current release: V1.0.0**
+**Current release: V1.0.1**
 
 [中文说明](README_zh.md)
 
@@ -26,6 +26,10 @@ This project focuses on that new attack surface:
 - **Broad AI provider secret coverage** across OpenAI, Anthropic, DeepSeek, Kimi, Qwen/DashScope, Zhipu GLM, Doubao/Seedance, MiniMax, Baichuan, SiliconFlow, ModelScope, and many more.
 - **Release-ready reporting** with terminal, JSON, SARIF, Markdown, Excel, and PDF outputs, including separate English, Chinese, and machine-readable directories.
 - **CI-friendly controls** such as `--fail-on`, SARIF upload, generated rule docs, and baseline mode for existing repositories.
+
+## V1.0.1 Fix
+
+V1.0.1 fixes an interactive CLI report-target issue: after scanning another directory, options 3 and 4 now default to the last scanned project directory, so generated reports match the scan result shown in the terminal.
 
 ## 30-Second Start
 
@@ -139,7 +143,7 @@ If the project is somewhere else, pass the full path:
 agent-scan D:\Projects\my-agent-project
 ```
 
-In interactive mode, "Scan current directory" means the directory where your terminal is currently located. For prompts that ask for a project directory, press Enter or type `.` to use the current directory. To scan another project, enter its full path.
+In interactive mode, "Scan current directory" means the directory where your terminal is currently located. For prompts that ask for a project directory, press Enter or type `.` to use the current directory. To scan another project, enter its full path. After you scan another directory, report-generation actions default to that last scanned directory, so pressing Enter keeps reports aligned with the scan you just reviewed.
 
 The scanner checks files such as:
 
@@ -674,7 +678,7 @@ agent-scan rules --format markdown --output docs/RULES_zh.md --lang zh
 pytest
 ```
 
-For the full V1.0.0 release checklist, see `docs/RELEASE_CHECKLIST.md`. For release announcements, GitHub topics, and launch copy, see `docs/LAUNCH.md`.
+For the current release checklist, see `docs/RELEASE_CHECKLIST.md`. For release announcements, GitHub topics, and launch copy, see `docs/LAUNCH.md`.
 
 Run the CLI without installing:
 

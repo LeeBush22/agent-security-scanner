@@ -32,6 +32,7 @@ from agent_security_scanner.terminal import responsive_console, sync_console_wid
 def run_interactive(console: Console | None = None, language: Language = Language.EN) -> None:
     console = responsive_console(console)
     show_header = True
+    last_target = Path(".").resolve()
 
     while True:
         prompts = PromptSession(language=language)
@@ -48,7 +49,9 @@ def run_interactive(console: Console | None = None, language: Language = Languag
             continue
         elif choice in {"1", "scan", "current"}:
             _print_section(console, t("scan_current", language), language)
-            _scan(Path("."), console, language)
+            scanned_target = _scan(Path("."), console, language)
+            if scanned_target is not None:
+                last_target = scanned_target
             _print_action_boundary(console, language)
         elif choice in {"2", "path"}:
             try:
@@ -56,17 +59,20 @@ def run_interactive(console: Console | None = None, language: Language = Languag
                 _print_project_path_hint(console, language)
                 _print_back_hint(console, language)
                 target = Path(prompts.ask(t("path_to_scan", language), default="."))
-                _scan(target, console, language)
+                scanned_target = _scan(target, console, language)
+                if scanned_target is not None:
+                    last_target = scanned_target
                 _print_action_boundary(console, language)
             except BackRequested:
                 _returned(console, language)
         elif choice in {"3", "all"}:
             try:
                 _print_section(console, t("generate_all_reports", language), language)
+                _print_last_target_hint(console, language)
                 _print_back_hint(console, language)
-                target = Path(prompts.ask(t("all_reports_project_directory", language), default="."))
+                target = Path(prompts.ask(t("all_reports_project_directory", language), default=str(last_target)))
                 output_dir = Path(prompts.ask(t("all_reports_output_directory", language), default="output"))
-                _write_all_reports(target, output_dir, console, language)
+                last_target = _write_all_reports(target, output_dir, console, language)
                 _print_action_boundary(console, language)
             except OSError as exc:
                 _print_file_error(console, exc, language)
@@ -76,15 +82,18 @@ def run_interactive(console: Console | None = None, language: Language = Languag
         elif choice in {"4", "reports"}:
             try:
                 _print_section(console, t("generate_excel_pdf", language), language)
+                _print_last_target_hint(console, language)
                 _print_back_hint(console, language)
-                target = Path(prompts.ask(t("excel_pdf_project_directory", language), default="."))
+                target = Path(prompts.ask(t("excel_pdf_project_directory", language), default=str(last_target)))
                 output_dir = Path(prompts.ask(t("excel_pdf_output_directory", language), default="output"))
                 result = _scan_result(target)
+                last_target = Path(result.target)
                 paths = report_paths(output_dir)
                 write_excel_report(result, paths.english_excel, language=Language.EN)
                 write_excel_report(result, paths.chinese_excel, language=Language.ZH)
                 write_pdf_report(result, paths.english_pdf, language=Language.EN)
                 write_pdf_report(result, paths.chinese_pdf, language=Language.ZH)
+                console.print(f"{t('report_scan_target', language)}: [cyan]{result.target}[/cyan]")
                 console.print(f"{t('wrote_reports', language)} [cyan]{output_dir}[/cyan].")
                 _print_action_boundary(console, language)
             except OSError as exc:
@@ -195,11 +204,13 @@ def run_interactive(console: Console | None = None, language: Language = Languag
             console.print(f"[yellow]{t('unknown_option', language)}[/yellow]")
 
 
-def _scan(target: Path, console: Console, language: Language) -> None:
+def _scan(target: Path, console: Console, language: Language) -> Path | None:
     if not target.exists():
         console.print(f"[red]{t('path_not_exist', language)}:[/red] {target}")
-        return
-    render_terminal(_scan_result(target), console, language=language)
+        return None
+    result = _scan_result(target)
+    render_terminal(result, console, language=language)
+    return Path(result.target)
 
 
 def _scan_result(target: Path):
@@ -207,10 +218,12 @@ def _scan_result(target: Path):
     return Scanner(project_config=project_config).scan(target)
 
 
-def _write_all_reports(target: Path, output_dir: Path, console: Console, language: Language) -> None:
+def _write_all_reports(target: Path, output_dir: Path, console: Console, language: Language) -> Path:
     result = _scan_result(target)
     write_all_reports(result, output_dir)
+    console.print(f"{t('report_scan_target', language)}: [cyan]{result.target}[/cyan]")
     console.print(f"{t('wrote_all_reports', language)} [cyan]{output_dir}[/cyan].")
+    return Path(result.target)
 
 
 def _returned(console: Console, language: Language) -> None:
@@ -233,6 +246,10 @@ def _print_path_hint(console: Console, language: Language) -> None:
 
 def _print_project_path_hint(console: Console, language: Language) -> None:
     console.print(f"[dim]{t('project_directory_hint', language)}[/dim]")
+
+
+def _print_last_target_hint(console: Console, language: Language) -> None:
+    console.print(f"[dim]{t('last_target_hint', language)}[/dim]")
 
 
 def _print_back_hint(console: Console, language: Language) -> None:
