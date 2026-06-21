@@ -84,10 +84,12 @@ def _read_windows_line() -> str:
     except ImportError:
         return sys.stdin.readline().rstrip("\r\n")
 
+    getwch = getattr(msvcrt, "getwch")
+
     def read_key() -> str:
-        char = msvcrt.getwch()
+        char = getwch()
         if char in {"\x00", "\xe0"}:
-            msvcrt.getwch()
+            getwch()
             return ""
         return char
 

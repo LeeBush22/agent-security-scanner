@@ -6,6 +6,11 @@ from typing import Any
 
 import yaml
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # Python 3.10 compatibility
+    import tomli as tomllib
+
 from agent_security_scanner.models import Category, FileContext, Finding, Severity
 from agent_security_scanner.rules.base import Rule
 
@@ -147,8 +152,6 @@ def _parse_config(context: FileContext) -> Any | None:
         if suffix in {".yaml", ".yml"}:
             return yaml.safe_load(context.text)
         if suffix == ".toml":
-            import tomllib
-
             return tomllib.loads(context.text)
     except (json.JSONDecodeError, yaml.YAMLError, tomllib.TOMLDecodeError):
         return None

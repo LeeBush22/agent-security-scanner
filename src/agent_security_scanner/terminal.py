@@ -69,7 +69,7 @@ def _windows_visible_width() -> int | None:
         import ctypes
         from ctypes import wintypes
 
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32 = getattr(ctypes, "WinDLL")("kernel32", use_last_error=True)
         kernel32.GetStdHandle.argtypes = [wintypes.DWORD]
         kernel32.GetStdHandle.restype = wintypes.HANDLE
         kernel32.GetConsoleScreenBufferInfo.argtypes = [
