@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 
 from agent_security_scanner.output import render_sarif
@@ -14,7 +14,7 @@ def test_render_sarif_has_expected_shape(tmp_path: Path):
     assert payload["version"] == "2.1.0"
     driver = payload["runs"][0]["tool"]["driver"]
     assert driver["name"] == "agent-security-scanner"
-    assert driver["semanticVersion"] == "1.0.2"
+    assert driver["semanticVersion"] == "1.0.3"
     assert payload["runs"][0]["results"][0]["ruleId"] == "SEC001"
     assert payload["runs"][0]["results"][0]["properties"]["remediation"]["steps"]
 

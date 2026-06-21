@@ -15,7 +15,7 @@ class RuleInfo:
     description: str
 
 
-RULE_ID_RE = re.compile(r"^(AIT|SEC|MCP|SH|GHA|SC)\d{3}$")
+RULE_ID_RE = re.compile(r"^(AIT|SEC|MCP|SH|GHA|SC|FS)\d{3}$")
 RULE_PREFIX_CATEGORY = {
     "AIT": Category.AI_TOOL,
     "SEC": Category.SECRETS,
@@ -23,6 +23,7 @@ RULE_PREFIX_CATEGORY = {
     "SH": Category.SHELL,
     "GHA": Category.GITHUB_ACTIONS,
     "SC": Category.SUPPLY_CHAIN,
+    "FS": Category.FILESYSTEM,
 }
 
 
@@ -530,6 +531,27 @@ RULE_CATALOG: tuple[RuleInfo, ...] = (
         Category.GITHUB_ACTIONS,
         Severity.MEDIUM,
         "Workflow grants id-token: write for cloud authentication, but repository-side YAML cannot prove strict cloud subject and audience constraints.",
+    ),
+    RuleInfo(
+        "FS001",
+        "Sensitive local file is included in the scanned project",
+        Category.FILESYSTEM,
+        Severity.HIGH,
+        "Project contains a file path commonly used for local credentials or security-sensitive configuration.",
+    ),
+    RuleInfo(
+        "FS002",
+        "Sensitive host directory path is present",
+        Category.FILESYSTEM,
+        Severity.HIGH,
+        "Project contains a path under a sensitive host credential or configuration directory.",
+    ),
+    RuleInfo(
+        "FS003",
+        "Broad filesystem permission command detected",
+        Category.FILESYSTEM,
+        Severity.MEDIUM,
+        "A command grants broad read/write/execute permissions to users or groups.",
     ),
 )
 

@@ -126,7 +126,7 @@ TRANSLATIONS: dict[str, dict[Language, str]] = {
     },
     "category_filter": {Language.EN: "Category filter (optional)", Language.ZH: "分类过滤（可选）"},
     "category_filter_hint": {
-        Language.EN: "Category filter: press Enter for all rules; or enter secrets, mcp, shell, github-actions, ai-tool, or supply-chain.",
+        Language.EN: "Category filter: press Enter for all rules; or enter secrets, mcp, shell, github-actions, ai-tool, supply-chain, or filesystem.",
         Language.ZH: "分类过滤：直接回车显示全部；可输入 secrets、mcp、shell、github-actions、ai-tool、supply-chain。",
     },
     "baseline_path": {Language.EN: "Baseline path", Language.ZH: "Baseline 路径"},
@@ -171,7 +171,7 @@ CATEGORY_ZH = {
     "filesystem": "文件系统",
 }
 
-CATEGORY_ZH.update({"supply-chain": "供应链"})
+CATEGORY_ZH.update({"supply-chain": "供应链", "filesystem": "文件系统"})
 
 EFFORT_ZH = {
     "low": "低",
@@ -812,6 +812,45 @@ REMEDIATION_STEPS_ZH.update(
             "确认 audience 只允许预期的 GitHub OIDC 使用方。",
             "避免将宽泛仓库写权限与云部署 OIDC 权限组合使用。",
         ],
+    }
+)
+
+RULE_TITLE_ZH.update(
+    {
+        "FS001": "项目中包含敏感本地文件",
+        "FS002": "项目中包含敏感主机目录路径",
+        "FS003": "发现过宽文件系统权限命令",
+    }
+)
+
+RULE_RECOMMENDATION_ZH.update(
+    {
+        "FS001": "请从项目中移除敏感本地文件，将其加入 .gitignore，并在需要时轮换已暴露凭据。",
+        "FS002": "请避免将主机凭据目录放入项目工作区，或共享给 Agent / MCP 工具。",
+        "FS003": "请使用最小必要权限，避免 chmod 777、chmod 666 或递归授予全局读写执行权限。",
+        "FS": "请减少文件系统暴露范围，移除敏感本地文件，并使用最小必要文件权限。",
+    }
+)
+
+REMEDIATION_SUMMARY_ZH.update(
+    {
+        "FS": "减少文件系统暴露，并从项目中移除敏感本地文件。",
+    }
+)
+
+REMEDIATION_STEPS_ZH.update(
+    {
+        "FS": [
+            "从项目工作区移除本地凭据文件和主机安全配置目录。",
+            "将敏感文件模式加入 .gitignore；仅在有明确原因时使用扫描忽略配置。",
+            "凭据文件应使用仅所有者可访问的权限，避免过宽 chmod 模式。",
+        ],
+    }
+)
+
+RULE_DESCRIPTION_ZH_BY_PREFIX.update(
+    {
+        "FS": "文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。",
     }
 )
 

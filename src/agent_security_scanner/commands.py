@@ -389,7 +389,7 @@ def report_paths(output: Path | None, target: str | Path | None = None) -> Repor
         root = timestamped_root
         base_name = f"{project_name}_{timestamped_root.name}"
         language_suffix = True
-    elif explicit_file:
+    elif explicit_file and output is not None:
         base_name = _sanitize_filename(output.stem)
         language_suffix = False
     else:

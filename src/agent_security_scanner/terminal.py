@@ -17,6 +17,7 @@ def visible_terminal_width() -> int:
     """Return the current visible terminal width, not the scrollback buffer width."""
     for width in _candidate_widths():
         if _valid_width(width):
+            assert width is not None
             return max(MIN_TERMINAL_WIDTH, width)
     width = 80
     return max(MIN_TERMINAL_WIDTH, width)

@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from math import log2
+from typing import Sequence
 
 from agent_security_scanner.models import Category, FileContext, Finding, Severity
 from agent_security_scanner.rules.base import Rule
@@ -578,7 +579,7 @@ def _has_secret_context(text: str, start: int, end: int) -> bool:
     return bool(SECRET_CONTEXT_RE.search(text[before:after]))
 
 
-def _scan_ai_provider_secrets(context: FileContext, patterns: list[AIProviderSecretPattern]) -> list[Finding]:
+def _scan_ai_provider_secrets(context: FileContext, patterns: Sequence[AIProviderSecretPattern]) -> list[Finding]:
     findings: list[Finding] = []
     for pattern in patterns:
         findings.extend(_scan_provider_token_prefixes(context, pattern))
@@ -659,7 +660,7 @@ def _provider_finding(context: FileContext, pattern: AIProviderSecretPattern, va
     )
 
 
-def _scan_ai_provider_key_pairs(context: FileContext, patterns: tuple[AIProviderKeyPairPattern, ...]) -> list[Finding]:
+def _scan_ai_provider_key_pairs(context: FileContext, patterns: Sequence[AIProviderKeyPairPattern]) -> list[Finding]:
     findings: list[Finding] = []
     assignments = _collect_assignments(context.text)
     for pattern in patterns:

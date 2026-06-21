@@ -24,6 +24,7 @@ env/
 .env
 .env.*
 !.env.example
+.claude/
 report.md
 report.json
 .agent-scan-baseline.json

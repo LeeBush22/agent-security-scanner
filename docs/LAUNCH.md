@@ -1,32 +1,30 @@
 # Launch Kit
 
-Use this file when publishing Agent Security Scanner V1.0.2 on GitHub, social platforms, newsletters, or security communities.
+Use this file when publishing Agent Security Scanner V1.0.3 on GitHub, social platforms, newsletters, or security communities.
 
 ## GitHub Release Title
 
-Agent Security Scanner V1.0.2 - Progress feedback and timestamped reports
+Agent Security Scanner V1.0.3 - Release maturity, full PDF reports, and fix previews
 
 ## GitHub Release Summary
 
-Agent Security Scanner V1.0.2 improves the interactive CLI experience and report output behavior. Long-running scan and report actions now show visible status messages, report generation can reuse the last matching scan result, and default report files are grouped by project and timestamp with names like `my-project_20260621_153000_en.pdf`.
+Agent Security Scanner V1.0.3 focuses on release maturity and functional gap fixes for the local-first AI Agent, MCP, and AI coding tool security scanner.
 
 Highlights:
 
-- Options 1, 2, 3, and 4 in interactive mode now show clear scan/report progress.
-- Report generation reuses the last matching scan result when possible.
-- Default Markdown, Excel, PDF, JSON, and SARIF reports are grouped under `output/<project>/<timestamp>/`.
-- Human-readable report names use `project_timestamp_language.format`.
-- Consecutive report runs no longer overwrite each other.
-- Explicit file output remains compatible, and standalone SARIF still defaults to `output/machine/agent-scan.sarif`.
-- Local-first scanning: no source code, secrets, prompts, or reports are uploaded.
-- Broad AI provider API key coverage for global and Chinese providers.
-- MCP, AI coding tool, GitHub Actions, shell, and supply-chain checks remain included.
+- Added project CI for Python 3.10, 3.11, and 3.12.
+- Added coverage, mypy, and nox configuration.
+- Added CHANGELOG.md and CONTRIBUTING.md.
+- Removed the previous PDF 80-finding display cap; PDF reports now include all findings through normal pagination.
+- Added filesystem rules for sensitive local files, sensitive host paths, and broad permission commands.
+- Added `agent-scan fix` as a safe autofix preview command. It prints patch-style suggestions and does not modify files by default.
+- Local-first scanning remains the default: no source code, secrets, prompts, or reports are uploaded.
 
 ## Short Announcement
 
-I just released Agent Security Scanner V1.0.2: a usability-focused update for the local-first CLI scanner for AI Agent, MCP, and AI coding tool projects.
+I just released Agent Security Scanner V1.0.3.
 
-This release adds visible progress feedback for longer interactive scans and report generation. Reports now use project and timestamp based output directories, so scanning multiple projects in one session creates clean, separate report sets instead of overwriting `report.*` files.
+This release strengthens the project for open-source use: CI, coverage, mypy, nox, CHANGELOG, and CONTRIBUTING are now included. It also fixes functional gaps from the previous release by removing the PDF 80-finding cap, adding filesystem risk rules, and introducing a safe autofix preview command.
 
 Repo: https://github.com/LeeBush22/agent-security-scanner
 
@@ -36,11 +34,20 @@ Install:
 python -m pip install --upgrade agentsec-scanner
 ```
 
+Try:
+
+```bash
+agent-scan .
+agent-scan . --format all
+agent-scan fix .
+agent-scan rules --category filesystem
+```
+
 ## Chinese Announcement
 
-我发布了 Agent Security Scanner V1.0.2：这是一次面向交互体验和报告输出的更新。
+我发布了 Agent Security Scanner V1.0.3。
 
-本次更新为交互式菜单中的扫描和报告生成增加了明确的等待提示，避免长时间任务看起来像卡死。默认报告输出也改为按项目名和时间戳分组，文件名格式为 `项目名_时间戳_语言.格式`，连续扫描多个项目时不会互相覆盖。
+这个版本主要补齐发布成熟度和功能缺口：新增项目自身 CI、coverage、mypy、nox、CHANGELOG 和 CONTRIBUTING；PDF 报告不再限制只展示前 80 条发现；新增文件系统风险规则；新增 `agent-scan fix` 安全修复预览命令，默认只展示补丁式建议，不会自动修改用户文件。
 
 仓库地址：https://github.com/LeeBush22/agent-security-scanner
 
@@ -84,9 +91,11 @@ agent-scan .
 agent-scan . --format all
 agent-scan . --lang zh
 agent-scan rules --category mcp
+agent-scan rules --category filesystem
+agent-scan fix .
 agent-scan . --format sarif --fail-on high
 ```
 
 ## Positioning
 
-Agent Security Scanner is not a generic vulnerability scanner and not a replacement for mature SAST, dependency, or cloud security tooling. It is a focused local-first scanner for the AI Agent and AI coding tool layer: local permissions, MCP configuration, tool instructions, hooks, credentials, shell commands, workflow automation, and release-time reports.
+Agent Security Scanner is not a generic vulnerability scanner and not a replacement for mature SAST, dependency, or cloud security tooling. It is a focused local-first scanner for the AI Agent and AI coding tool layer: local permissions, MCP configuration, tool instructions, hooks, credentials, shell commands, workflow automation, filesystem exposure, and release-time reports.

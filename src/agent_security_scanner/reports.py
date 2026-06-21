@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from html import escape
 from pathlib import Path
+from typing import Any
 
 from agent_security_scanner.i18n import (
     Language,
@@ -292,7 +293,7 @@ def write_pdf_report(result: ScanResult, output_path: Path, language: Language =
         story.append(Spacer(1, 14))
 
     story.append(Paragraph(_text("3. Remediation Guidance", "三、修复建议", language), styles["Heading2"]))
-    for index, finding in enumerate(result.findings[:80], start=1):
+    for index, finding in enumerate(result.findings, start=1):
         location = finding.file_path if not finding.line else f"{finding.file_path}:{finding.line}"
         title = f"{index}. {finding.rule_id}: {rule_title(finding.rule_id, finding.title, language)}"
         if language == Language.EN:
@@ -332,18 +333,6 @@ def write_pdf_report(result: ScanResult, output_path: Path, language: Language =
         )
         story.append(Spacer(1, 8))
 
-    if len(result.findings) > 80:
-        story.append(
-            Paragraph(
-                _text(
-                    "PDF truncated after 80 findings. Use Excel or JSON for full details.",
-                    "PDF 仅展示前 80 个发现。完整详情请查看 Excel 或 JSON。",
-                    language,
-                ),
-                styles["Italic"],
-            )
-        )
-
     doc.build(story, onFirstPage=_pdf_footer(font_name, language), onLaterPages=_pdf_footer(font_name, language))
     return output_path
 
@@ -354,7 +343,7 @@ def _pdf_table(
     bold_font_name: str = "Helvetica-Bold",
     col_widths: list[int] | None = None,
     cell_style=None,
-) -> "PdfTable":
+) -> Any:
     from reportlab.lib import colors
     from reportlab.lib.units import mm
     from reportlab.platypus import Table as PdfTable, TableStyle
@@ -388,7 +377,7 @@ def _pdf_key_value_table(
     bold_font_name: str = "Helvetica-Bold",
     cell_style=None,
     language: Language = Language.EN,
-) -> "PdfTable":
+) -> Any:
     from reportlab.lib import colors
     from reportlab.platypus import Table as PdfTable, TableStyle
 

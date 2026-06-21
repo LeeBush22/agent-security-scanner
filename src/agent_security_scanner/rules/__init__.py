@@ -1,4 +1,5 @@
 from agent_security_scanner.rules.ai_tools import AIToolConfigRule
+from agent_security_scanner.rules.filesystem import FilesystemRiskRule
 from agent_security_scanner.rules.github_actions import GitHubActionsRule
 from agent_security_scanner.rules.mcp import MCPConfigRule
 from agent_security_scanner.rules.secrets import SecretsRule
@@ -12,11 +13,13 @@ DEFAULT_RULES = [
     ShellDangerRule(),
     GitHubActionsRule(),
     SupplyChainRule(),
+    FilesystemRiskRule(),
 ]
 
 __all__ = [
     "DEFAULT_RULES",
     "AIToolConfigRule",
+    "FilesystemRiskRule",
     "GitHubActionsRule",
     "MCPConfigRule",
     "SecretsRule",

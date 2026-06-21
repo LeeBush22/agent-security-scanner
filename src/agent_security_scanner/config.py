@@ -164,7 +164,7 @@ def _parse_positive_int(value: object) -> int | None:
     if value is None:
         return None
     try:
-        parsed = int(value)
+        parsed = int(str(value))
     except (TypeError, ValueError):
         return None
     return parsed if parsed > 0 else None

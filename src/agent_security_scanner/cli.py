@@ -8,6 +8,7 @@ import typer
 from rich.console import Console
 
 from agent_security_scanner import __display_version__
+from agent_security_scanner.autofix import collect_fix_previews, render_fix_previews
 from agent_security_scanner.commands import (
     collect_report_files,
     render_doctor,
@@ -17,10 +18,12 @@ from agent_security_scanner.commands import (
     run_scan,
     write_default_config,
 )
+from agent_security_scanner.config import load_project_config
 from agent_security_scanner.i18n import Language, t
 from agent_security_scanner.interactive import run_interactive
 from agent_security_scanner.models import Severity
 from agent_security_scanner.output import render_welcome
+from agent_security_scanner.scanner import Scanner
 
 
 app = typer.Typer(add_completion=False)
@@ -28,7 +31,7 @@ command_app = typer.Typer(
     add_completion=False,
     help="Local-first security scanner for AI Agent, MCP, and AI coding tool projects.",
 )
-COMMAND_NAMES = {"scan", "init", "doctor", "rules", "report"}
+COMMAND_NAMES = {"scan", "fix", "init", "doctor", "rules", "report"}
 
 
 def version_callback(value: bool) -> None:
@@ -192,6 +195,30 @@ def init_command(
     console.print(f"{t('wrote_config', language)} [cyan]{config_path}[/cyan]")
 
 
+@command_app.command("fix", help="Preview safe autofix suggestions without modifying files.")
+def fix_command(
+    path: Path = typer.Argument(Path("."), help="File or directory to scan."),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Write the fix preview to a file."),
+    severity: Severity = typer.Option(Severity.INFO, "--severity", help="Minimum severity to include."),
+    config: Optional[Path] = typer.Option(None, "--config", help="Path to .agent-scan.yml config file."),
+    no_config: bool = typer.Option(False, "--no-config", help="Do not load project config files."),
+    no_color: bool = typer.Option(False, "--no-color", help="Disable colored terminal output."),
+) -> None:
+    if not path.exists():
+        raise typer.BadParameter(f"Path does not exist: {path}")
+    project_config = load_project_config(path, config_path=config, no_config=no_config)
+    result = Scanner(project_config=project_config).scan(path, min_severity=severity)
+    root = path.resolve() if path.is_dir() else path.resolve().parent
+    rendered = render_fix_previews(collect_fix_previews(result, root))
+    console = Console(no_color=no_color)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(rendered, encoding="utf-8")
+        console.print(f"{t('wrote_report', Language.EN)} [cyan]{output}[/cyan]")
+        return
+    typer.echo(rendered)
+
+
 @command_app.command("doctor", help="Check local runtime dependencies and report directory access.")
 def doctor_command(
     path: Path = typer.Argument(Path("."), help="Project directory to check."),
@@ -210,7 +237,7 @@ def rules_command(
         None,
         "--category",
         "-c",
-        help="Filter by category: secrets, mcp, shell, github-actions, ai-tool, or supply-chain.",
+        help="Filter by category: secrets, mcp, shell, github-actions, ai-tool, supply-chain, or filesystem.",
     ),
     output_format: str = typer.Option(
         "table",

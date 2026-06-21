@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentsec-scanner"
-version = "1.0.2"
+version = "1.0.3"
 description = "Local-first security scanner for AI Agent, MCP, and AI coding tool projects."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -50,6 +50,10 @@ Documentation = "https://github.com/LeeBush22/agent-security-scanner#readme"
 
 [project.optional-dependencies]
 dev = [
+  "build>=1.2",
+  "coverage[toml]>=7.0",
+  "mypy>=1.8",
+  "nox>=2024.4",
   "pytest>=8.0"
 ]
 
@@ -60,6 +64,28 @@ agentsec = "agent_security_scanner.cli:entrypoint"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.coverage.run]
+branch = true
+source = ["agent_security_scanner"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 75
+exclude_also = [
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["agent_security_scanner"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agent_security_scanner"]

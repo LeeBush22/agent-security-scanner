@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich import box
@@ -366,7 +367,7 @@ def _header_panel(width: int, language: Language) -> Panel:
     ]
 
     if width < 92:
-        content = "\n".join([logo, "", *summary_lines, "", *quick_lines])
+        content: Any = "\n".join([logo, "", *summary_lines, "", *quick_lines])
     else:
         layout = Table.grid(expand=True, padding=(0, 2))
         layout.add_column(ratio=1)

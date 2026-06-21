@@ -1,19 +1,17 @@
-# V1.0.2 Release Checklist
+# V1.0.3 Release Checklist
 
-Use this checklist before publishing Agent Security Scanner V1.0.2.
+Use this checklist before publishing Agent Security Scanner V1.0.3.
 
 ## Version
 
-- [ ] `pyproject.toml` version is `1.0.2`.
+- [ ] `pyproject.toml` version is `1.0.3`.
+- [ ] `src/agent_security_scanner/__init__.py` version is `1.0.3`.
 - [ ] `pyproject.toml` package name is `agentsec-scanner` for PyPI publishing.
-- [ ] `src/agent_security_scanner/__init__.py` version is `1.0.2`.
-- [ ] `pyproject.toml` package status is `Development Status :: 4 - Beta`.
-- [ ] `pyproject.toml` includes Homepage, Repository, Issues, and Documentation URLs.
-- [ ] README files describe the current V1.0.2 feature set.
-- [ ] Generated rule docs are up to date.
-- [ ] Report output examples use `output/<project>/<timestamp>/...`.
+- [ ] README files describe the current V1.0.3 feature set.
+- [ ] Generated rule docs are up to date and show 129 built-in rules.
+- [ ] CHANGELOG.md and CONTRIBUTING.md are present.
 
-## Tests
+## Quality Gates
 
 - [ ] Run the full test suite:
 
@@ -21,42 +19,44 @@ Use this checklist before publishing Agent Security Scanner V1.0.2.
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-- [ ] Run rule documentation checks:
+- [ ] Run tests with coverage:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_rules_docs.py tests\test_i18n.py -q
+.\.venv\Scripts\coverage.exe run -m pytest -q
+.\.venv\Scripts\coverage.exe report
 ```
 
-- [ ] Run a sample scan:
+- [ ] Run type checks:
 
 ```powershell
-.\.venv\Scripts\agent-scan.exe examples\sample-project --format json
+.\.venv\Scripts\mypy.exe
 ```
 
-## Documentation
+- [ ] Run nox where supported:
 
-- [ ] Regenerate English rules documentation:
+```powershell
+.\.venv\Scripts\nox.exe
+```
+
+## Feature Checks
+
+- [ ] Generate English and Chinese rule docs:
 
 ```powershell
 .\.venv\Scripts\agent-scan.exe rules --format markdown --output docs\RULES.md
-```
-
-- [ ] Regenerate Chinese rules documentation:
-
-```powershell
 .\.venv\Scripts\agent-scan.exe rules --format markdown --output docs\RULES_zh.md --lang zh
 ```
 
-- [ ] Confirm Chinese CLI output does not fall back to English rule titles for newly added rules.
-- [ ] Confirm README and `README_zh.md` include usage examples, report formats, and supported rule families.
-- [ ] Confirm README and `README_zh.md` show `python -m pip install agentsec-scanner` as the PyPI install command.
+- [ ] Confirm PDF reports include more than 80 findings when the scan result is large.
+- [ ] Confirm `agent-scan rules --category filesystem` lists FS001, FS002, and FS003.
+- [ ] Confirm `agent-scan fix .` prints a preview and does not modify files.
+- [ ] Confirm CI workflow exists at `.github/workflows/ci.yml`.
 
 ## Privacy
 
-- [ ] Search for personal paths, usernames, phone numbers, email addresses, or real secrets.
+- [ ] Search for personal paths, usernames, phone numbers, email addresses, recovery codes, or real secrets.
 - [ ] Confirm examples only contain fake demo credentials.
-- [ ] Confirm generated reports are not committed unless intentionally included.
-- [ ] Confirm `.pytest_cache`, `__pycache__`, temporary files, and local output artifacts are excluded.
+- [ ] Confirm generated reports, `.release-logs`, `dist`, `.pytest_cache`, and local output artifacts are not committed unless intentionally included.
 
 ## Package
 
@@ -75,7 +75,11 @@ Use this checklist before publishing Agent Security Scanner V1.0.2.
 
 ## GitHub Release
 
-- [ ] Add a concise release summary.
-- [ ] Highlight local-first scanning, AI provider key detection, MCP checks, AI coding tool checks, GitHub Actions checks, SARIF, Excel, PDF, Markdown, and JSON reports.
-- [ ] Include screenshots or terminal output examples.
-- [ ] Mention that the project is rule-based and should be used as a security review aid, not as a complete security audit replacement.
+- [ ] Highlight release maturity upgrades: CI, coverage, mypy, nox, CHANGELOG, and CONTRIBUTING.
+- [ ] Highlight functional fixes: full PDF output, filesystem rules, and safe autofix preview.
+- [ ] Mention that autofix is preview-only by default and does not modify files automatically.
+- [ ] Include install and upgrade commands:
+
+```bash
+python -m pip install --upgrade agentsec-scanner
+```

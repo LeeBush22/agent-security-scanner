@@ -232,6 +232,16 @@ RULE_REMEDIATION: dict[str, Remediation] = {
         effort="medium",
         automatable=False,
     ),
+    "FS": Remediation(
+        summary="Reduce filesystem exposure and remove sensitive local files from the project.",
+        steps=[
+            "Remove local credential files and host security directories from the project workspace.",
+            "Add sensitive file patterns to .gitignore or the scanner allowlist only with a documented reason.",
+            "Use owner-only permissions for credential files and avoid broad chmod patterns.",
+        ],
+        effort="low",
+        automatable=False,
+    ),
     "SC005": Remediation(
         summary="Remove package manager credentials from config files.",
         steps=[

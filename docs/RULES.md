@@ -2,13 +2,14 @@
 
 This document is generated from the built-in rule catalog. It is intended for release review, SARIF metadata, and users who want to understand what the scanner checks.
 
-Total built-in rules: **126**
+Total built-in rules: **129**
 
 ## Categories
 
 | Category | Rules |
 |---|---:|
 | `ai-tool` | 17 |
+| `filesystem` | 3 |
 | `github-actions` | 12 |
 | `mcp` | 18 |
 | `secrets` | 53 |
@@ -38,6 +39,14 @@ Total built-in rules: **126**
 | [AIT015](#ait015-vs-code-task-runs-automatically-when-folder-opens) | `high` | VS Code task runs automatically when folder opens | VS Code tasks.json config can execute a command automatically when the project folder is opened. |
 | [AIT016](#ait016-ai-skill-reference-is-unpinned-or-from-an-untrusted-source) | `high` | AI skill reference is unpinned or from an untrusted source | AI skill or command reference appears to use a mutable version or external registry/source. |
 | [AIT017](#ait017-gemini-cli-configuration-contains-unsafe-automation-setting) | `high` | Gemini CLI configuration contains unsafe automation setting | Gemini CLI related configuration appears to enable broad automation or disable confirmation/sandbox controls. |
+
+### filesystem
+
+| Rule | Severity | Title | Description |
+|---|---|---|---|
+| [FS001](#fs001-sensitive-local-file-is-included-in-the-scanned-project) | `high` | Sensitive local file is included in the scanned project | Project contains a file path commonly used for local credentials or security-sensitive configuration. |
+| [FS002](#fs002-sensitive-host-directory-path-is-present) | `high` | Sensitive host directory path is present | Project contains a path under a sensitive host credential or configuration directory. |
+| [FS003](#fs003-broad-filesystem-permission-command-detected) | `medium` | Broad filesystem permission command detected | A command grants broad read/write/execute permissions to users or groups. |
 
 ### github-actions
 
@@ -930,3 +939,21 @@ Total built-in rules: **126**
 - Category: `github-actions`
 - Severity: `medium`
 - Description: Workflow grants id-token: write for cloud authentication, but repository-side YAML cannot prove strict cloud subject and audience constraints.
+
+### FS001 Sensitive local file is included in the scanned project
+
+- Category: `filesystem`
+- Severity: `high`
+- Description: Project contains a file path commonly used for local credentials or security-sensitive configuration.
+
+### FS002 Sensitive host directory path is present
+
+- Category: `filesystem`
+- Severity: `high`
+- Description: Project contains a path under a sensitive host credential or configuration directory.
+
+### FS003 Broad filesystem permission command detected
+
+- Category: `filesystem`
+- Severity: `medium`
+- Description: A command grants broad read/write/execute permissions to users or groups.

@@ -2,13 +2,14 @@
 
 本文档由内置规则目录生成，用于发布前复核、SARIF 元数据和用户理解扫描范围。
 
-内置规则总数：**126**
+内置规则总数：**129**
 
 ## 规则分类
 
 | 分类 | 规则数 |
 |---|---:|
 | `ai-tool` | 17 |
+| `filesystem` | 3 |
 | `github-actions` | 12 |
 | `mcp` | 18 |
 | `secrets` | 53 |
@@ -38,6 +39,14 @@
 | [AIT015](#ait015-vs-code-task-runs-automatically-when-folder-opens) | `高危` | VS Code 打开文件夹时自动运行任务 | VS Code tasks.json 配置可能在打开项目文件夹时自动执行命令。 |
 | [AIT016](#ait016-ai-skill-reference-is-unpinned-or-from-an-untrusted-source) | `高危` | AI Skill 引用未固定或来自不可信来源 | AI Skill 或命令引用使用可变版本、外部注册表或不可信来源。 |
 | [AIT017](#ait017-gemini-cli-configuration-contains-unsafe-automation-setting) | `高危` | Gemini CLI 配置包含不安全自动化设置 | Gemini CLI 相关配置可能启用宽泛自动化，或关闭确认、沙箱等安全控制。 |
+
+### 文件系统
+
+| 规则 | 等级 | 标题 | 说明 |
+|---|---|---|---|
+| [FS001](#fs001-sensitive-local-file-is-included-in-the-scanned-project) | `高危` | 项目中包含敏感本地文件 | 文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。 |
+| [FS002](#fs002-sensitive-host-directory-path-is-present) | `高危` | 项目中包含敏感主机目录路径 | 文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。 |
+| [FS003](#fs003-broad-filesystem-permission-command-detected) | `中危` | 发现过宽文件系统权限命令 | 文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。 |
 
 ### GitHub Actions
 
@@ -1308,3 +1317,30 @@
 - 等级：`中危`
 - 中文标题：OIDC 云侧信任策略约束需要核验
 - 说明：工作流为云认证授予 id-token: write，但仓库侧 YAML 无法证明云侧 subject、audience 等信任约束足够严格。
+
+<a id="fs001-sensitive-local-file-is-included-in-the-scanned-project"></a>
+
+### FS001 项目中包含敏感本地文件
+
+- 分类：`文件系统`
+- 等级：`高危`
+- 中文标题：项目中包含敏感本地文件
+- 说明：文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。
+
+<a id="fs002-sensitive-host-directory-path-is-present"></a>
+
+### FS002 项目中包含敏感主机目录路径
+
+- 分类：`文件系统`
+- 等级：`高危`
+- 中文标题：项目中包含敏感主机目录路径
+- 说明：文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。
+
+<a id="fs003-broad-filesystem-permission-command-detected"></a>
+
+### FS003 发现过宽文件系统权限命令
+
+- 分类：`文件系统`
+- 等级：`中危`
+- 中文标题：发现过宽文件系统权限命令
+- 说明：文件系统中存在可能暴露本地凭据、主机配置或过宽访问权限的风险。

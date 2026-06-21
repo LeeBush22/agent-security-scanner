@@ -1,11 +1,11 @@
 # Agent Security Scanner
 
-**Current release: V1.0.2**
+**Current release: V1.0.3**
 
 [中文说明](README_zh.md)
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
-[![Rules](https://img.shields.io/badge/rules-126-brightgreen)](docs/RULES.md)
+[![Rules](https://img.shields.io/badge/rules-129-brightgreen)](docs/RULES.md)
 [![Local first](https://img.shields.io/badge/local--first-no%20upload-success)](#why-agent-security-scanner)
 [![Reports](https://img.shields.io/badge/reports-JSON%20%7C%20SARIF%20%7C%20Markdown%20%7C%20Excel%20%7C%20PDF-informational)](#output-formats)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
@@ -27,9 +27,9 @@ This project focuses on that new attack surface:
 - **Release-ready reporting** with terminal, JSON, SARIF, Markdown, Excel, and PDF outputs, including separate English, Chinese, and machine-readable directories.
 - **CI-friendly controls** such as `--fail-on`, SARIF upload, generated rule docs, and baseline mode for existing repositories.
 
-## V1.0.2 Update
+## V1.0.3 Update
 
-V1.0.2 improves the interactive CLI experience during longer scans and report generation. Options 1, 2, 3, and 4 now show clear progress/status messages, report generation reuses the last matching scan result when possible, and default report output is grouped by project and timestamp. Human-readable report files now use the format `project_timestamp_language.format`, for example `my-project_20260621_153000_en.pdf`.
+V1.0.3 focuses on release maturity and functional gap fixes. It adds project CI, coverage, mypy, nox, CHANGELOG and CONTRIBUTING docs, removes the PDF 80-finding cap, adds filesystem risk rules, and introduces a safe `agent-scan fix` preview command that shows patch-style remediation suggestions without modifying files by default.
 
 ## 30-Second Start
 
@@ -75,6 +75,7 @@ agent-scan . --lang zh
 | Supply chain | 16 | Install hooks, package credentials, remote dependencies, Docker/devcontainer risks, `binding.gyp`, `setup.py` |
 | GitHub Actions | 12 | Broad permissions, unpinned actions, `pull_request_target`, OIDC, artifact/cache trust chains |
 | Shell | 10 | `curl | bash`, destructive commands, reverse shells, encoded execution, package-manager immediate execution |
+| Filesystem | 3 | Sensitive local files, sensitive host paths, broad filesystem permission commands |
 
 ## Output Matrix
 
@@ -165,6 +166,7 @@ It primarily looks for:
 - GitHub Actions risks such as `pull_request_target`, unpinned actions, broad workflow/job permissions, untrusted expression injection, OIDC permission exposure, cache/artifact poisoning, `workflow_run` artifact promotion, secret echoing, script downloads, and self-hosted runners
 - AI coding tool risks such as auto-approval, skipped permission checks, broad workspace access, shell-capable tools, embedded credentials, unsafe agent instruction files, memory/rule poisoning, excessive autonomy, data exfiltration instructions, and high-risk tool combinations
 - Supply-chain risks such as package install scripts, remote dependency sources, package manager credentials, Docker build downloads, privileged containers, sensitive host mounts, devcontainer lifecycle commands, and unpinned requirements
+- Filesystem risks such as local credential files, sensitive host directories, and broad permission commands
 
 You do not need to create a special empty folder for this scanner. Use it against real project source directories that you want to review before development, release, open-source publication, or CI deployment.
 
@@ -179,6 +181,7 @@ You do not need to create a special empty folder for this scanner. Use it agains
 - Shell command checks for destructive deletes, `curl | bash`, PowerShell dynamic execution, encoded commands, reverse shells, destructive disk commands, disabled safety controls, inline dynamic code, package-manager immediate execution, and possible exfiltration
 - GitHub Actions checks for `pull_request_target`, unpinned actions, workflow/job permissions, expression injection, OIDC permission exposure, OIDC cloud trust policy verification hints, cache/artifact poisoning, `workflow_run`, secret echoing, script downloads, and self-hosted runners
 - Supply-chain checks for `package.json`, package manager auth files, Dockerfile, Docker Compose, devcontainer, Python requirements, `binding.gyp` command substitution, and suspicious `setup.py` install-time command execution
+- Filesystem checks for sensitive local files, host credential directories, and broad `chmod` permission patterns
 - Polished responsive native terminal interactive CLI plus command-oriented subcommands
 - English and Chinese CLI language switching
 - Terminal, JSON, Markdown, SARIF, Excel, and PDF output
@@ -186,6 +189,7 @@ You do not need to create a special empty folder for this scanner. Use it agains
 - SARIF output for GitHub Code Scanning and compatible tools, with rule metadata, help URIs, severity, precision, and tags
 - Generated rule documentation in `docs/RULES.md` and `docs/RULES_zh.md`
 - Release quality checks for rule ID uniqueness, prefix/category consistency, metadata completeness, and registered scanner rules
+- Project CI, coverage, mypy, and nox configuration for release checks
 - Example unsafe fixtures and pytest coverage
 
 ## Install
@@ -334,6 +338,13 @@ agent-scan report
 agent-scan report --lang zh
 ```
 
+Preview safe autofix suggestions without modifying files:
+
+```bash
+agent-scan fix .
+agent-scan fix . --output fix-preview.md
+```
+
 Scan with a minimum severity:
 
 ```bash
@@ -425,7 +436,7 @@ SARIF output is intended for security automation and code scanning systems:
 
 - `output/machine/agent-scan.sarif`
 
-Excel output contains `Summary`, `Findings`, `Remediation`, and `Rules` sheets in English, and matching Chinese sheets in the Chinese report. Chinese Markdown, Excel, and PDF reports localize remediation summaries and suggested steps instead of reusing English guidance. PDF output uses a polished audit-report layout with blue title styling, blue section headings, blue table headers, a combined summary table, and structured remediation sections.
+Excel output contains `Summary`, `Findings`, `Remediation`, and `Rules` sheets in English, and matching Chinese sheets in the Chinese report. Chinese Markdown, Excel, and PDF reports localize remediation summaries and suggested steps instead of reusing English guidance. PDF output uses a polished audit-report layout with blue title styling, blue section headings, blue table headers, a combined summary table, and structured remediation sections. V1.0.3 removes the previous 80-finding display cap, so large PDF reports include all findings through normal pagination.
 
 Markdown, JSON, and SARIF findings include structured remediation metadata with:
 
@@ -562,6 +573,7 @@ Show rules in the terminal:
 ```bash
 agent-scan rules
 agent-scan rules --category ai-tool
+agent-scan rules --category filesystem
 ```
 
 V1.0.0 core scanning now includes the first-stage rule expansion for broader secret providers, PowerShell and reverse-shell patterns, MCP remote transport/scope risks, and unsafe AI agent instruction files. The second-stage core upgrade adds structured GitHub Actions analysis and deeper MCP path semantics. The third-stage upgrade adds Agent/MCP-specific checks for memory poisoning, excessive autonomy, tool description poisoning, and remote prompt injection. The fourth-stage upgrade adds local-first supply-chain configuration checks. The fifth-stage release upgrade adds rule catalog consistency checks, generated rule documentation, and richer SARIF rule metadata.
@@ -643,6 +655,10 @@ V1.0.0 core scanning now includes the first-stage rule expansion for broader sec
 | GHA009 | github-actions | medium | Cache or artifact action used in untrusted workflow context |
 | GHA010 | github-actions | high | Downloaded artifact or cache content is executed |
 | GHA011 | github-actions | high | `workflow_run` may process untrusted artifacts with elevated permissions |
+| GHA012 | github-actions | medium | OIDC cloud trust policy constraints require verification |
+| FS001 | filesystem | high | Sensitive local file is included in the scanned project |
+| FS002 | filesystem | high | Sensitive host directory path is present |
+| FS003 | filesystem | medium | Broad filesystem permission command detected |
 
 ## Examples
 
@@ -701,7 +717,7 @@ This first release is intentionally conservative:
 ## Roadmap
 
 - MCP server risk profiles
-- Safe autofix suggestions
+- Safe autofix apply mode for narrowly scoped, reversible changes
 
 ## License
 

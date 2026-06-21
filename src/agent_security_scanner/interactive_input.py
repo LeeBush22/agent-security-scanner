@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import sys
 from typing import Callable
 from typing import Optional
+from typing import Any
 
 import typer
 
@@ -101,12 +102,14 @@ def _read_posix_line() -> str:
         return sys.stdin.readline().rstrip("\r\n")
 
     fd = sys.stdin.fileno()
-    original_settings = termios.tcgetattr(fd)
+    termios_module: Any = termios
+    tty_module: Any = tty
+    original_settings = termios_module.tcgetattr(fd)
     try:
-        tty.setcbreak(fd)
+        tty_module.setcbreak(fd)
         return _read_key_line(lambda: sys.stdin.read(1), _write_stdout)
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, original_settings)
+        termios_module.tcsetattr(fd, termios_module.TCSADRAIN, original_settings)
 
 
 def _read_key_line(read_key: Callable[[], str], write_text: Callable[[str], None]) -> str:

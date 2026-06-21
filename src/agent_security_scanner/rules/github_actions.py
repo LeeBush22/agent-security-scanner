@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -293,7 +293,9 @@ def _has_event(on_value: Any, event_name: str) -> bool:
 
 def _workflow_events(data: dict[str, Any]) -> Any:
     # PyYAML follows YAML 1.1 booleans, so GitHub's "on" key can parse as True.
-    return data.get("on", data.get(True))
+    if "on" in data:
+        return data["on"]
+    return cast(Any, data).get(True)
 
 
 def _uses_self_hosted(value: Any) -> bool:
