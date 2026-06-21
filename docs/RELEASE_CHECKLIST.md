@@ -5,6 +5,7 @@ Use this checklist before publishing Agent Security Scanner V1.0.0.
 ## Version
 
 - [ ] `pyproject.toml` version is `1.0.0`.
+- [ ] `pyproject.toml` package name is `agentsec-scanner` for PyPI publishing.
 - [ ] `src/agent_security_scanner/__init__.py` version is `1.0.0`.
 - [ ] `pyproject.toml` package status is `Development Status :: 4 - Beta`.
 - [ ] `pyproject.toml` includes Homepage, Repository, Issues, and Documentation URLs.
@@ -47,6 +48,7 @@ Use this checklist before publishing Agent Security Scanner V1.0.0.
 
 - [ ] Confirm Chinese CLI output does not fall back to English rule titles for newly added rules.
 - [ ] Confirm README and `README_zh.md` include usage examples, report formats, and supported rule families.
+- [ ] Confirm README and `README_zh.md` show `python -m pip install agentsec-scanner` as the PyPI install command.
 
 ## Privacy
 

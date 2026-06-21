@@ -29,6 +29,12 @@ It checks for risky tool permissions, plaintext AI provider keys, MCP config ris
 
 Repo: https://github.com/LeeBush22/agent-security-scanner
 
+Install:
+
+```bash
+python -m pip install agentsec-scanner
+```
+
 ## Chinese Announcement
 
 我发布了 Agent Security Scanner V1.0.0：一个本地优先的 AI Agent / MCP / AI 编程工具安全扫描器。
@@ -36,6 +42,12 @@ Repo: https://github.com/LeeBush22/agent-security-scanner
 它可以扫描危险工具权限、明文 AI 服务商 API Key、MCP 配置风险、可疑 Shell 命令、GitHub Actions 自动化风险和供应链配置风险。支持终端、JSON、SARIF、Markdown、Excel、PDF 报告，并支持中英双语输出。
 
 仓库地址：https://github.com/LeeBush22/agent-security-scanner
+
+安装命令：
+
+```bash
+python -m pip install agentsec-scanner
+```
 
 ## README Star Checklist
 

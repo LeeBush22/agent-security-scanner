@@ -28,6 +28,7 @@ report.md
 report.json
 .agent-scan-baseline.json
 output/
+.release-logs/
 
 # IDEs
 .idea/

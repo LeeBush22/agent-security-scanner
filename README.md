@@ -29,7 +29,13 @@ This project focuses on that new attack surface:
 
 ## 30-Second Start
 
-Install from this repository:
+Install from PyPI:
+
+```bash
+python -m pip install agentsec-scanner
+```
+
+Or install from this repository:
 
 ```bash
 git clone https://github.com/LeeBush22/agent-security-scanner.git
@@ -196,6 +202,12 @@ For runtime-only use:
 
 ```bash
 python -m pip install .
+```
+
+Published package name:
+
+```bash
+python -m pip install agentsec-scanner
 ```
 
 ## Usage
