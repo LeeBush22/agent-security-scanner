@@ -15,6 +15,20 @@ from agent_security_scanner.interactive_input import BackRequested, _read_key_li
 runner = CliRunner()
 
 
+def _single_report(root: Path, pattern: str) -> Path:
+    matches = sorted(root.rglob(pattern))
+    assert len(matches) == 1, f"expected one report for {pattern}, found {matches}"
+    return matches[0]
+
+
+def _report_run_dirs(root: Path) -> list[Path]:
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_dir() and (path / "en").is_dir() and (path / "zh").is_dir()
+    )
+
+
 def test_cli_runs_terminal_scan(tmp_path: Path):
     (tmp_path / "app.py").write_text('key = "sk-example1234567890example1234567890"', encoding="utf-8")
 
@@ -30,21 +44,21 @@ def test_cli_welcome_screen():
 
     assert result.exit_code == 0
     assert "Tips for getting started" in result.output
-    assert "V1.0.1" in result.output
+    assert "V1.0.2" in result.output
 
 
 def test_cli_version_uses_v1_display_label():
     result = runner.invoke(app, ["--version"])
 
     assert result.exit_code == 0
-    assert "agent-security-scanner V1.0.1" in result.output
+    assert "agent-security-scanner V1.0.2" in result.output
 
 
 def test_cli_no_args_starts_interactive_and_can_exit():
     result = runner.invoke(app, input="13\n")
 
     assert result.exit_code == 0
-    assert "Agent Security Scanner V1.0.1" in result.output
+    assert "Agent Security Scanner V1.0.2" in result.output
     assert "Native Terminal CLI" in result.output
     assert "Interactive Menu" in result.output
     assert "Local scan, no code upload" in result.output
@@ -83,7 +97,7 @@ def test_cli_interactive_refresh_redraws_menu():
 
     assert result.exit_code == 0
     assert result.output.count("Interactive Menu") >= 2
-    assert result.output.count("Agent Security Scanner V1.0.1") >= 2
+    assert result.output.count("Agent Security Scanner V1.0.2") >= 2
     assert "Goodbye" in result.output
 
 
@@ -92,7 +106,7 @@ def test_cli_unknown_option_does_not_repeat_header():
 
     assert result.exit_code == 0
     assert result.output.count("Interactive Menu") >= 2
-    assert result.output.count("Agent Security Scanner V1.0.1") == 1
+    assert result.output.count("Agent Security Scanner V1.0.2") == 1
     assert "Unknown option" in result.output
 
 
@@ -102,7 +116,7 @@ def test_cli_action_return_only_shows_compact_menu():
     assert result.exit_code == 0
     assert "Command Examples" in result.output
     assert result.output.count("Interactive Menu") >= 2
-    assert result.output.count("Agent Security Scanner V1.0.1") == 1
+    assert result.output.count("Agent Security Scanner V1.0.2") == 1
 
 
 def test_cli_language_switch_return_shows_full_header():
@@ -111,7 +125,7 @@ def test_cli_language_switch_return_shows_full_header():
     assert result.exit_code == 0
     assert "Language switched to" in result.output or "语言已切换" in result.output
     assert result.output.count("Interactive Menu") + result.output.count("交互式菜单") >= 2
-    assert result.output.count("Agent Security Scanner V1.0.1") >= 2
+    assert result.output.count("Agent Security Scanner V1.0.2") >= 2
 
 
 def test_cli_interactive_main_menu_esc_word_exits():
@@ -190,10 +204,12 @@ def test_cli_interactive_excel_pdf_writes_bilingual_reports(tmp_path: Path, monk
     result = runner.invoke(app, input=f"4\n{tmp_path}\noutput\n13\n")
 
     assert result.exit_code == 0
-    assert (tmp_path / "output" / "en" / "report.xlsx").exists()
-    assert (tmp_path / "output" / "en" / "report.pdf").exists()
-    assert (tmp_path / "output" / "zh" / "report.xlsx").exists()
-    assert (tmp_path / "output" / "zh" / "report.pdf").exists()
+    assert "Generating English Excel" in result.output
+    assert "Generating Chinese PDF" in result.output
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_en.xlsx").exists()
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_en.pdf").exists()
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_zh.xlsx").exists()
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_zh.pdf").exists()
 
 
 def test_cli_interactive_report_prompts_are_specific_in_chinese(tmp_path: Path, monkeypatch):
@@ -225,11 +241,16 @@ def test_cli_interactive_all_reports_default_to_last_scanned_directory(tmp_path:
     assert result.exit_code == 0
     assert "报告扫描目标" in result.output
     assert str(other_project) in result.output
-    report = current_project / "output" / "en" / "report.md"
+    assert "使用上一次扫描结果生成报告" in result.output
+    report = _single_report(current_project / "output", f"{other_project.name}_*_en.md")
     assert report.exists()
+    assert report.parent.name == "en"
+    assert report.parent.parent.parent.name == other_project.name
     report_text = report.read_text(encoding="utf-8")
     assert str(other_project) in report_text
     assert "SEC001" in report_text
+    assert _single_report(current_project / "output", f"{other_project.name}_*_zh.md").exists()
+    assert _single_report(current_project / "output", f"{other_project.name}_*_machine.json").exists()
 
 
 def test_cli_interactive_excel_pdf_default_to_last_scanned_directory(tmp_path: Path, monkeypatch):
@@ -246,10 +267,12 @@ def test_cli_interactive_excel_pdf_default_to_last_scanned_directory(tmp_path: P
     assert result.exit_code == 0
     assert "报告扫描目标" in result.output
     assert str(other_project) in result.output
-    assert (current_project / "output" / "en" / "report.xlsx").exists()
-    assert (current_project / "output" / "zh" / "report.xlsx").exists()
-    assert (current_project / "output" / "en" / "report.pdf").exists()
-    assert (current_project / "output" / "zh" / "report.pdf").exists()
+    assert "正在生成英文 Excel" in result.output
+    assert "正在生成中文 PDF" in result.output
+    assert _single_report(current_project / "output", f"{other_project.name}_*_en.xlsx").exists()
+    assert _single_report(current_project / "output", f"{other_project.name}_*_zh.xlsx").exists()
+    assert _single_report(current_project / "output", f"{other_project.name}_*_en.pdf").exists()
+    assert _single_report(current_project / "output", f"{other_project.name}_*_zh.pdf").exists()
 
 
 def test_cli_interactive_baseline_prompt_is_specific_in_both_languages(tmp_path: Path, monkeypatch):
@@ -362,13 +385,15 @@ def test_cli_all_output_directory(tmp_path: Path):
     result = runner.invoke(app, [str(tmp_path), "--format", "all", "--output", str(report_dir)])
 
     assert result.exit_code == 0
-    assert (report_dir / "en" / "report.md").exists()
-    assert (report_dir / "zh" / "report.md").exists()
-    assert (report_dir / "en" / "report.xlsx").exists()
-    assert (report_dir / "zh" / "report.xlsx").exists()
-    assert (report_dir / "en" / "report.pdf").exists()
-    assert (report_dir / "zh" / "report.pdf").exists()
-    assert (report_dir / "machine" / "agent-scan.sarif").exists()
+    project_name = tmp_path.name
+    assert _single_report(report_dir, f"{project_name}_*_en.md").exists()
+    assert _single_report(report_dir, f"{project_name}_*_zh.md").exists()
+    assert _single_report(report_dir, f"{project_name}_*_en.xlsx").exists()
+    assert _single_report(report_dir, f"{project_name}_*_zh.xlsx").exists()
+    assert _single_report(report_dir, f"{project_name}_*_en.pdf").exists()
+    assert _single_report(report_dir, f"{project_name}_*_zh.pdf").exists()
+    assert _single_report(report_dir, f"{project_name}_*_machine.sarif").exists()
+    assert _single_report(report_dir, f"{project_name}_*_machine.json").exists()
 
 
 def test_cli_markdown_output_directory(tmp_path: Path):
@@ -378,10 +403,12 @@ def test_cli_markdown_output_directory(tmp_path: Path):
     result = runner.invoke(app, [str(tmp_path), "--format", "markdown", "--output", str(report_dir)])
 
     assert result.exit_code == 0
-    english_report = report_dir / "en" / "report.md"
-    chinese_report = report_dir / "zh" / "report.md"
+    english_report = _single_report(report_dir, f"{tmp_path.name}_*_en.md")
+    chinese_report = _single_report(report_dir, f"{tmp_path.name}_*_zh.md")
     assert english_report.exists()
     assert chinese_report.exists()
+    assert english_report.parent.name == "en"
+    assert chinese_report.parent.name == "zh"
     assert "Agent Security Scanner Report" in english_report.read_text(encoding="utf-8")
     chinese_text = chinese_report.read_text(encoding="utf-8")
     assert "Agent Security Scanner 扫描报告" in chinese_text
@@ -422,8 +449,23 @@ def test_cli_markdown_defaults_to_output_directory(tmp_path: Path, monkeypatch):
     result = runner.invoke(app, [str(tmp_path), "--format", "markdown"])
 
     assert result.exit_code == 0
-    assert (tmp_path / "output" / "en" / "report.md").exists()
-    assert (tmp_path / "output" / "zh" / "report.md").exists()
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_en.md").exists()
+    assert _single_report(tmp_path / "output", f"{tmp_path.name}_*_zh.md").exists()
+
+
+def test_cli_report_generation_creates_unique_runs(tmp_path: Path):
+    (tmp_path / "app.py").write_text('key = "sk-example1234567890example1234567890"', encoding="utf-8")
+    report_dir = tmp_path / "output"
+
+    first = runner.invoke(app, [str(tmp_path), "--format", "markdown", "--output", str(report_dir)])
+    second = runner.invoke(app, [str(tmp_path), "--format", "markdown", "--output", str(report_dir)])
+
+    assert first.exit_code == 0
+    assert second.exit_code == 0
+    run_dirs = _report_run_dirs(report_dir)
+    assert len(run_dirs) == 2
+    assert len({path.name for path in run_dirs}) == 2
+    assert len(list(report_dir.rglob(f"{tmp_path.name}_*_en.md"))) == 2
 
 
 def test_cli_can_update_and_apply_baseline(tmp_path: Path):

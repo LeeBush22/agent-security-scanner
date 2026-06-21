@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import typer
 from rich.console import Console
@@ -39,16 +41,8 @@ from agent_security_scanner.terminal import sync_console_width
 
 
 VALID_OUTPUT_FORMATS = {"terminal", "json", "markdown", "sarif", "excel", "pdf", "all"}
-REPORT_FILENAMES = {
-    "Markdown (English)": Path("en") / "report.md",
-    "Markdown (Chinese)": Path("zh") / "report.md",
-    "Excel (English)": Path("en") / "report.xlsx",
-    "Excel (Chinese)": Path("zh") / "report.xlsx",
-    "PDF (English)": Path("en") / "report.pdf",
-    "PDF (Chinese)": Path("zh") / "report.pdf",
-    "SARIF": Path("machine") / "agent-scan.sarif",
-    "JSON": Path("machine") / "report.json",
-}
+INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+ReportProgress = Callable[[str, Path], None]
 
 DEFAULT_CONFIG_TEXT = """# Agent Security Scanner configuration
 # See README.md for all available options.
@@ -141,12 +135,9 @@ def run_scan(
             output = machine_report_file(output, "report.json")
     elif fmt == "sarif":
         rendered = render_sarif(result)
-        if output is None:
-            output = report_paths(None).sarif
-        else:
-            output = machine_report_file(output, "agent-scan.sarif")
+        output = machine_report_file(output, "agent-scan.sarif")
     elif fmt == "excel":
-        paths = report_paths(output)
+        paths = report_paths(output, target=result.target)
         write_excel_report(result, paths.english_excel, language=Language.EN)
         write_excel_report(result, paths.chinese_excel, language=Language.ZH)
         console.print(f"{t('wrote_english', effective_language)} [cyan]{paths.english_excel}[/cyan]")
@@ -154,7 +145,7 @@ def run_scan(
         exit_if_gate_failed(result, fail_on, console, effective_language)
         return
     elif fmt == "pdf":
-        paths = report_paths(output)
+        paths = report_paths(output, target=result.target)
         write_pdf_report(result, paths.english_pdf, language=Language.EN)
         write_pdf_report(result, paths.chinese_pdf, language=Language.ZH)
         console.print(f"{t('wrote_english', effective_language)} [cyan]{paths.english_pdf}[/cyan]")
@@ -162,12 +153,12 @@ def run_scan(
         exit_if_gate_failed(result, fail_on, console, effective_language)
         return
     elif fmt == "all":
-        write_all_reports(result, report_dir(output))
-        console.print(f"{t('wrote_reports', effective_language)} [cyan]{report_dir(output)}[/cyan]")
+        paths = write_all_reports(result, report_dir(output))
+        console.print(f"{t('wrote_reports', effective_language)} [cyan]{paths.root}[/cyan]")
         exit_if_gate_failed(result, fail_on, console, effective_language)
         return
     elif fmt == "markdown":
-        paths = report_paths(output)
+        paths = report_paths(output, target=result.target)
         paths.english_dir.mkdir(parents=True, exist_ok=True)
         paths.chinese_dir.mkdir(parents=True, exist_ok=True)
         english_report = paths.english_markdown
@@ -195,18 +186,36 @@ def run_scan(
     exit_if_gate_failed(result, fail_on, console, effective_language)
 
 
-def write_all_reports(result: ScanResult, directory: Path) -> None:
-    paths = report_paths(directory)
+def write_all_reports(result: ScanResult, directory: Path, progress: ReportProgress | None = None) -> ReportPaths:
+    paths = report_paths(directory, target=result.target)
     paths.english_dir.mkdir(parents=True, exist_ok=True)
     paths.chinese_dir.mkdir(parents=True, exist_ok=True)
     paths.machine_dir.mkdir(parents=True, exist_ok=True)
+    if progress:
+        progress("markdown_en", paths.english_markdown)
     paths.english_markdown.write_text(render_markdown_en(result), encoding="utf-8")
+    if progress:
+        progress("markdown_zh", paths.chinese_markdown)
     paths.chinese_markdown.write_text(render_markdown_zh(result), encoding="utf-8")
+    if progress:
+        progress("json", paths.json)
+    paths.json.write_text(render_json(result), encoding="utf-8")
+    if progress:
+        progress("sarif", paths.sarif)
     paths.sarif.write_text(render_sarif(result), encoding="utf-8")
+    if progress:
+        progress("excel_en", paths.english_excel)
     write_excel_report(result, paths.english_excel, language=Language.EN)
+    if progress:
+        progress("excel_zh", paths.chinese_excel)
     write_excel_report(result, paths.chinese_excel, language=Language.ZH)
+    if progress:
+        progress("pdf_en", paths.english_pdf)
     write_pdf_report(result, paths.english_pdf, language=Language.EN)
+    if progress:
+        progress("pdf_zh", paths.chinese_pdf)
     write_pdf_report(result, paths.chinese_pdf, language=Language.ZH)
+    return paths
 
 
 def write_default_config(target: Path, force: bool = False) -> Path:
@@ -220,11 +229,16 @@ def write_default_config(target: Path, force: bool = False) -> Path:
 
 
 def collect_report_files(output_dir: Path) -> list[tuple[str, Path]]:
-    return [
-        (label, output_dir / relative_path)
-        for label, relative_path in REPORT_FILENAMES.items()
-        if (output_dir / relative_path).is_file()
-    ]
+    if not output_dir.exists():
+        return []
+    files: list[tuple[str, Path]] = []
+    for path in sorted(output_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        label = _report_label_for_path(path)
+        if label:
+            files.append((label, path))
+    return files
 
 
 def render_reports_table(output_dir: Path, console: Console, language: Language = Language.EN) -> None:
@@ -366,24 +380,42 @@ def report_dir(output: Path | None) -> Path:
     return output
 
 
-def report_paths(output: Path | None) -> ReportPaths:
+def report_paths(output: Path | None, target: str | Path | None = None) -> ReportPaths:
     root = report_dir(output)
+    explicit_file = bool(output and output.suffix)
+    if target is not None and not explicit_file:
+        project_name = _safe_project_name(target)
+        timestamped_root = _unique_path(root / project_name / _timestamp())
+        root = timestamped_root
+        base_name = f"{project_name}_{timestamped_root.name}"
+        language_suffix = True
+    elif explicit_file:
+        base_name = _sanitize_filename(output.stem)
+        language_suffix = False
+    else:
+        base_name = "report"
+        language_suffix = False
+
     english_dir = root / "en"
     chinese_dir = root / "zh"
     machine_dir = root / "machine"
+    english_name = f"{base_name}_en" if language_suffix else base_name
+    chinese_name = f"{base_name}_zh" if language_suffix else base_name
+    machine_name = f"{base_name}_machine" if language_suffix else base_name
+    sarif_name = f"{machine_name}.sarif" if language_suffix else "agent-scan.sarif"
     return ReportPaths(
         root=root,
         english_dir=english_dir,
         chinese_dir=chinese_dir,
         machine_dir=machine_dir,
-        english_markdown=english_dir / "report.md",
-        chinese_markdown=chinese_dir / "report.md",
-        english_excel=english_dir / "report.xlsx",
-        chinese_excel=chinese_dir / "report.xlsx",
-        english_pdf=english_dir / "report.pdf",
-        chinese_pdf=chinese_dir / "report.pdf",
-        sarif=machine_dir / "agent-scan.sarif",
-        json=machine_dir / "report.json",
+        english_markdown=english_dir / f"{english_name}.md",
+        chinese_markdown=chinese_dir / f"{chinese_name}.md",
+        english_excel=english_dir / f"{english_name}.xlsx",
+        chinese_excel=chinese_dir / f"{chinese_name}.xlsx",
+        english_pdf=english_dir / f"{english_name}.pdf",
+        chinese_pdf=chinese_dir / f"{chinese_name}.pdf",
+        sarif=machine_dir / sarif_name,
+        json=machine_dir / f"{machine_name}.json",
     )
 
 
@@ -393,6 +425,46 @@ def machine_report_file(output: Path | None, default_name: str) -> Path:
     if output.suffix:
         return output
     return output / "machine" / default_name
+
+
+def _report_label_for_path(path: Path) -> str | None:
+    suffix = path.suffix.lower()
+    language = path.parent.name.lower()
+    if suffix == ".md":
+        return "Markdown (Chinese)" if language == "zh" else "Markdown (English)"
+    if suffix == ".xlsx":
+        return "Excel (Chinese)" if language == "zh" else "Excel (English)"
+    if suffix == ".pdf":
+        return "PDF (Chinese)" if language == "zh" else "PDF (English)"
+    if suffix == ".sarif":
+        return "SARIF"
+    if suffix == ".json":
+        return "JSON"
+    return None
+
+
+def _safe_project_name(target: str | Path) -> str:
+    path = Path(target)
+    return _sanitize_filename(path.name or path.stem or "scan-target")
+
+
+def _sanitize_filename(value: str) -> str:
+    sanitized = INVALID_FILENAME_CHARS.sub("_", value).strip().strip(".")
+    return sanitized or "scan-target"
+
+
+def _timestamp() -> str:
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def _unique_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for index in range(1, 1000):
+        candidate = path.with_name(f"{path.name}_{index:02d}")
+        if not candidate.exists():
+            return candidate
+    return path.with_name(f"{path.name}_{datetime.now().strftime('%f')}")
 
 
 def exit_if_gate_failed(

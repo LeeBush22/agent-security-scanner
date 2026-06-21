@@ -22,7 +22,7 @@ from agent_security_scanner.commands import (
 from agent_security_scanner.config import load_project_config
 from agent_security_scanner.i18n import Language, other_language, t
 from agent_security_scanner.interactive_input import BackRequested, PromptSession
-from agent_security_scanner.models import Severity
+from agent_security_scanner.models import ScanResult, Severity
 from agent_security_scanner.output import render_terminal
 from agent_security_scanner.reports import write_excel_report, write_pdf_report
 from agent_security_scanner.scanner import Scanner
@@ -33,6 +33,7 @@ def run_interactive(console: Console | None = None, language: Language = Languag
     console = responsive_console(console)
     show_header = True
     last_target = Path(".").resolve()
+    last_result: ScanResult | None = None
 
     while True:
         prompts = PromptSession(language=language)
@@ -49,9 +50,10 @@ def run_interactive(console: Console | None = None, language: Language = Languag
             continue
         elif choice in {"1", "scan", "current"}:
             _print_section(console, t("scan_current", language), language)
-            scanned_target = _scan(Path("."), console, language)
-            if scanned_target is not None:
-                last_target = scanned_target
+            result = _scan(Path("."), console, language)
+            if result is not None:
+                last_result = result
+                last_target = Path(result.target)
             _print_action_boundary(console, language)
         elif choice in {"2", "path"}:
             try:
@@ -59,9 +61,10 @@ def run_interactive(console: Console | None = None, language: Language = Languag
                 _print_project_path_hint(console, language)
                 _print_back_hint(console, language)
                 target = Path(prompts.ask(t("path_to_scan", language), default="."))
-                scanned_target = _scan(target, console, language)
-                if scanned_target is not None:
-                    last_target = scanned_target
+                result = _scan(target, console, language)
+                if result is not None:
+                    last_result = result
+                    last_target = Path(result.target)
                 _print_action_boundary(console, language)
             except BackRequested:
                 _returned(console, language)
@@ -72,7 +75,8 @@ def run_interactive(console: Console | None = None, language: Language = Languag
                 _print_back_hint(console, language)
                 target = Path(prompts.ask(t("all_reports_project_directory", language), default=str(last_target)))
                 output_dir = Path(prompts.ask(t("all_reports_output_directory", language), default="output"))
-                last_target = _write_all_reports(target, output_dir, console, language)
+                last_result = _write_all_reports(target, output_dir, console, language, cached_result=last_result)
+                last_target = Path(last_result.target)
                 _print_action_boundary(console, language)
             except OSError as exc:
                 _print_file_error(console, exc, language)
@@ -86,15 +90,20 @@ def run_interactive(console: Console | None = None, language: Language = Languag
                 _print_back_hint(console, language)
                 target = Path(prompts.ask(t("excel_pdf_project_directory", language), default=str(last_target)))
                 output_dir = Path(prompts.ask(t("excel_pdf_output_directory", language), default="output"))
-                result = _scan_result(target)
-                last_target = Path(result.target)
-                paths = report_paths(output_dir)
+                result = _result_for_reports(target, console, language, cached_result=last_result)
+                paths = report_paths(output_dir, target=result.target)
+                _print_report_phase(console, language, "excel_en", paths.english_excel)
                 write_excel_report(result, paths.english_excel, language=Language.EN)
+                _print_report_phase(console, language, "excel_zh", paths.chinese_excel)
                 write_excel_report(result, paths.chinese_excel, language=Language.ZH)
+                _print_report_phase(console, language, "pdf_en", paths.english_pdf)
                 write_pdf_report(result, paths.english_pdf, language=Language.EN)
+                _print_report_phase(console, language, "pdf_zh", paths.chinese_pdf)
                 write_pdf_report(result, paths.chinese_pdf, language=Language.ZH)
+                last_result = result
+                last_target = Path(result.target)
                 console.print(f"{t('report_scan_target', language)}: [cyan]{result.target}[/cyan]")
-                console.print(f"{t('wrote_reports', language)} [cyan]{output_dir}[/cyan].")
+                console.print(f"{t('wrote_reports', language)} [cyan]{paths.root}[/cyan].")
                 _print_action_boundary(console, language)
             except OSError as exc:
                 _print_file_error(console, exc, language)
@@ -204,26 +213,92 @@ def run_interactive(console: Console | None = None, language: Language = Languag
             console.print(f"[yellow]{t('unknown_option', language)}[/yellow]")
 
 
-def _scan(target: Path, console: Console, language: Language) -> Path | None:
+def _scan(target: Path, console: Console, language: Language) -> ScanResult | None:
     if not target.exists():
         console.print(f"[red]{t('path_not_exist', language)}:[/red] {target}")
         return None
-    result = _scan_result(target)
+    result = _scan_result(target, console=console, language=language)
     render_terminal(result, console, language=language)
-    return Path(result.target)
+    return result
 
 
-def _scan_result(target: Path):
+def _scan_result(target: Path, console: Console | None = None, language: Language = Language.EN) -> ScanResult:
+    resolved_target = target.resolve()
+    if console is not None:
+        console.print(f"{_ui('Scan target', '扫描目标', language)}: [cyan]{resolved_target}[/cyan]")
+        console.print(f"[dim]{_ui('Loading project configuration...', '正在加载项目配置...', language)}[/dim]")
     project_config = load_project_config(target)
-    return Scanner(project_config=project_config).scan(target)
+    scanner = Scanner(project_config=project_config)
+    if console is None:
+        return scanner.scan(target)
+    with console.status(
+        f"[cyan]{_ui('Scanning files and applying security rules...', '正在扫描文件并执行安全规则...', language)}[/cyan]",
+        spinner="dots",
+    ):
+        result = scanner.scan(target)
+    console.print(
+        f"[green]{_ui('Scan completed', '扫描完成', language)}[/green]: "
+        f"{result.summary.total} {_ui('finding(s)', '个发现', language)}"
+    )
+    return result
 
 
-def _write_all_reports(target: Path, output_dir: Path, console: Console, language: Language) -> Path:
-    result = _scan_result(target)
-    write_all_reports(result, output_dir)
+def _write_all_reports(
+    target: Path,
+    output_dir: Path,
+    console: Console,
+    language: Language,
+    cached_result: ScanResult | None = None,
+) -> ScanResult:
+    result = _result_for_reports(target, console, language, cached_result=cached_result)
+    paths = write_all_reports(
+        result,
+        output_dir,
+        progress=lambda phase, path: _print_report_phase(console, language, phase, path),
+    )
     console.print(f"{t('report_scan_target', language)}: [cyan]{result.target}[/cyan]")
-    console.print(f"{t('wrote_all_reports', language)} [cyan]{output_dir}[/cyan].")
-    return Path(result.target)
+    console.print(f"{t('wrote_all_reports', language)} [cyan]{paths.root}[/cyan].")
+    return result
+
+
+def _result_for_reports(
+    target: Path,
+    console: Console,
+    language: Language,
+    cached_result: ScanResult | None = None,
+) -> ScanResult:
+    if not target.exists():
+        raise FileNotFoundError(f"{t('path_not_exist', language)}: {target}")
+    if cached_result is not None and _same_target(target, Path(cached_result.target)):
+        console.print(
+            f"[dim]{_ui('Using the last scan result for report generation.', '使用上一次扫描结果生成报告。', language)}[/dim]"
+        )
+        return cached_result
+    console.print(
+        f"[dim]{_ui('No matching cached scan result; rescanning before report generation.', '没有匹配的缓存扫描结果，生成报告前将重新扫描。', language)}[/dim]"
+    )
+    return _scan_result(target, console=console, language=language)
+
+
+def _same_target(left: Path, right: Path) -> bool:
+    try:
+        return left.resolve() == right.resolve()
+    except OSError:
+        return left == right
+
+
+def _print_report_phase(console: Console, language: Language, phase: str, path: Path) -> None:
+    labels = {
+        "markdown_en": _ui("Generating English Markdown", "正在生成英文 Markdown", language),
+        "markdown_zh": _ui("Generating Chinese Markdown", "正在生成中文 Markdown", language),
+        "json": _ui("Generating JSON", "正在生成 JSON", language),
+        "sarif": _ui("Generating SARIF", "正在生成 SARIF", language),
+        "excel_en": _ui("Generating English Excel", "正在生成英文 Excel", language),
+        "excel_zh": _ui("Generating Chinese Excel", "正在生成中文 Excel", language),
+        "pdf_en": _ui("Generating English PDF", "正在生成英文 PDF", language),
+        "pdf_zh": _ui("Generating Chinese PDF", "正在生成中文 PDF", language),
+    }
+    console.print(f"[dim]{labels.get(phase, phase)}:[/dim] [cyan]{path.name}[/cyan]")
 
 
 def _returned(console: Console, language: Language) -> None:

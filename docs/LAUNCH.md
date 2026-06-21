@@ -1,52 +1,53 @@
 # Launch Kit
 
-Use this file when publishing Agent Security Scanner V1.0.1 on GitHub, social platforms, newsletters, or security communities.
+Use this file when publishing Agent Security Scanner V1.0.2 on GitHub, social platforms, newsletters, or security communities.
 
 ## GitHub Release Title
 
-Agent Security Scanner V1.0.1 - Interactive report target fix
+Agent Security Scanner V1.0.2 - Progress feedback and timestamped reports
 
 ## GitHub Release Summary
 
-Agent Security Scanner V1.0.1 fixes an interactive CLI report-target issue. After scanning another directory, report generation now defaults to the last scanned project directory, so generated Markdown, Excel, PDF, and SARIF reports match the scan result shown in the terminal.
+Agent Security Scanner V1.0.2 improves the interactive CLI experience and report output behavior. Long-running scan and report actions now show visible status messages, report generation can reuse the last matching scan result, and default report files are grouped by project and timestamp with names like `my-project_20260621_153000_en.pdf`.
 
 Highlights:
 
+- Options 1, 2, 3, and 4 in interactive mode now show clear scan/report progress.
+- Report generation reuses the last matching scan result when possible.
+- Default Markdown, Excel, PDF, JSON, and SARIF reports are grouped under `output/<project>/<timestamp>/`.
+- Human-readable report names use `project_timestamp_language.format`.
+- Consecutive report runs no longer overwrite each other.
+- Explicit file output remains compatible, and standalone SARIF still defaults to `output/machine/agent-scan.sarif`.
 - Local-first scanning: no source code, secrets, prompts, or reports are uploaded.
 - Broad AI provider API key coverage for global and Chinese providers.
-- MCP-specific checks for filesystem access, remote server authentication, stdio isolation, duplicate tool names, OAuth redirect risks, prompt injection, and unsafe tool descriptions.
-- AI coding tool checks for Claude Code hooks, Cursor/Codex/Continue/Roo/Cline/Gemini CLI settings, unsafe instruction files, dynamic shell execution, invisible Unicode, and base URL overrides.
-- GitHub Actions checks for permissions, unpinned actions, OIDC, artifact/cache trust paths, self-hosted runners, and risky event contexts.
-- Output formats: terminal, JSON, SARIF, Markdown, Excel, and PDF.
-- Bilingual English/Chinese reports and CLI output.
-- Baseline mode and `--fail-on` for CI adoption.
+- MCP, AI coding tool, GitHub Actions, shell, and supply-chain checks remain included.
 
 ## Short Announcement
 
-I just released Agent Security Scanner V1.0.1: a bugfix release for the local-first CLI scanner for AI Agent, MCP, and AI coding tool projects.
+I just released Agent Security Scanner V1.0.2: a usability-focused update for the local-first CLI scanner for AI Agent, MCP, and AI coding tool projects.
 
-This release fixes interactive report generation after scanning another directory. Options 3 and 4 now default to the last scanned project directory, keeping terminal scan results and generated reports aligned.
+This release adds visible progress feedback for longer interactive scans and report generation. Reports now use project and timestamp based output directories, so scanning multiple projects in one session creates clean, separate report sets instead of overwriting `report.*` files.
 
 Repo: https://github.com/LeeBush22/agent-security-scanner
 
 Install:
 
 ```bash
-python -m pip install agentsec-scanner
+python -m pip install --upgrade agentsec-scanner
 ```
 
 ## Chinese Announcement
 
-我发布了 Agent Security Scanner V1.0.1：这是一个针对交互式 CLI 的修复版本。
+我发布了 Agent Security Scanner V1.0.2：这是一次面向交互体验和报告输出的更新。
 
-本次修复了扫描其他目录后生成报告目标不一致的问题。现在选项 3 和选项 4 会默认使用上次扫描的项目目录，确保终端扫描结果和生成报告保持一致。
+本次更新为交互式菜单中的扫描和报告生成增加了明确的等待提示，避免长时间任务看起来像卡死。默认报告输出也改为按项目名和时间戳分组，文件名格式为 `项目名_时间戳_语言.格式`，连续扫描多个项目时不会互相覆盖。
 
 仓库地址：https://github.com/LeeBush22/agent-security-scanner
 
 安装命令：
 
 ```bash
-python -m pip install agentsec-scanner
+python -m pip install --upgrade agentsec-scanner
 ```
 
 ## README Star Checklist

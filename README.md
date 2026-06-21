@@ -1,6 +1,6 @@
 # Agent Security Scanner
 
-**Current release: V1.0.1**
+**Current release: V1.0.2**
 
 [中文说明](README_zh.md)
 
@@ -27,9 +27,9 @@ This project focuses on that new attack surface:
 - **Release-ready reporting** with terminal, JSON, SARIF, Markdown, Excel, and PDF outputs, including separate English, Chinese, and machine-readable directories.
 - **CI-friendly controls** such as `--fail-on`, SARIF upload, generated rule docs, and baseline mode for existing repositories.
 
-## V1.0.1 Fix
+## V1.0.2 Update
 
-V1.0.1 fixes an interactive CLI report-target issue: after scanning another directory, options 3 and 4 now default to the last scanned project directory, so generated reports match the scan result shown in the terminal.
+V1.0.2 improves the interactive CLI experience during longer scans and report generation. Options 1, 2, 3, and 4 now show clear progress/status messages, report generation reuses the last matching scan result when possible, and default report output is grouped by project and timestamp. Human-readable report files now use the format `project_timestamp_language.format`, for example `my-project_20260621_153000_en.pdf`.
 
 ## 30-Second Start
 
@@ -81,11 +81,11 @@ agent-scan . --lang zh
 | Format | Best for | Path |
 |---|---|---|
 | Terminal | Local review | stdout |
-| JSON | Automation and custom pipelines | `output/machine/report.json` |
+| JSON | Automation and custom pipelines | stdout, or `output/machine/report.json` when `--output` is used |
 | SARIF | GitHub Code Scanning and security platforms | `output/machine/agent-scan.sarif` |
-| Markdown | PR comments and human-readable reports | `output/en/report.md`, `output/zh/report.md` |
-| Excel | Audit triage and spreadsheet review | `output/en/report.xlsx`, `output/zh/report.xlsx` |
-| PDF | Shareable audit-style reports | `output/en/report.pdf`, `output/zh/report.pdf` |
+| Markdown | PR comments and human-readable reports | `output/<project>/<timestamp>/en/<project>_<timestamp>_en.md`, `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.md` |
+| Excel | Audit triage and spreadsheet review | `output/<project>/<timestamp>/en/<project>_<timestamp>_en.xlsx`, `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.xlsx` |
+| PDF | Shareable audit-style reports | `output/<project>/<timestamp>/en/<project>_<timestamp>_en.pdf`, `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.pdf` |
 
 ## How It Differs
 
@@ -258,8 +258,8 @@ agent-scan --format markdown
 This writes:
 
 ```text
-output/en/report.md
-output/zh/report.md
+output/<project>/<timestamp>/en/<project>_<timestamp>_en.md
+output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.md
 ```
 
 Write reports to a custom directory:
@@ -386,37 +386,40 @@ JSON output is intended for automation:
 }
 ```
 
-Human-readable reports are grouped by language, and machine-readable reports are grouped under `machine/`:
+Human-readable reports are grouped by scanned project, run timestamp, and language. File names use `project_timestamp_language.format`; machine-readable files for `--format all` are grouped under `machine/` in the same run directory:
 
 ```text
 output/
-├─ en/
-│  ├─ report.md
-│  ├─ report.xlsx
-│  └─ report.pdf
-├─ zh/
-│  ├─ report.md
-│  ├─ report.xlsx
-│  └─ report.pdf
-└─ machine/
-   ├─ agent-scan.sarif
-   └─ report.json
+└─ my-project/
+   └─ 20260621_153000/
+      ├─ en/
+      │  ├─ my-project_20260621_153000_en.md
+      │  ├─ my-project_20260621_153000_en.xlsx
+      │  └─ my-project_20260621_153000_en.pdf
+      ├─ zh/
+      │  ├─ my-project_20260621_153000_zh.md
+      │  ├─ my-project_20260621_153000_zh.xlsx
+      │  └─ my-project_20260621_153000_zh.pdf
+      └─ machine/
+         ├─ my-project_20260621_153000_machine.sarif
+         └─ my-project_20260621_153000_machine.json
 ```
 
 Markdown output is intended for reports and issue comments. It writes two files:
 
-- `output/en/report.md`
-- `output/zh/report.md`
+- `output/<project>/<timestamp>/en/<project>_<timestamp>_en.md`
+- `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.md`
 
 `--format all` writes every supported report artifact:
 
-- `output/en/report.md`
-- `output/en/report.xlsx`
-- `output/en/report.pdf`
-- `output/zh/report.md`
-- `output/zh/report.xlsx`
-- `output/zh/report.pdf`
-- `output/machine/agent-scan.sarif`
+- `output/<project>/<timestamp>/en/<project>_<timestamp>_en.md`
+- `output/<project>/<timestamp>/en/<project>_<timestamp>_en.xlsx`
+- `output/<project>/<timestamp>/en/<project>_<timestamp>_en.pdf`
+- `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.md`
+- `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.xlsx`
+- `output/<project>/<timestamp>/zh/<project>_<timestamp>_zh.pdf`
+- `output/<project>/<timestamp>/machine/<project>_<timestamp>_machine.sarif`
+- `output/<project>/<timestamp>/machine/<project>_<timestamp>_machine.json`
 
 SARIF output is intended for security automation and code scanning systems:
 
