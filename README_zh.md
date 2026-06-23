@@ -10,7 +10,7 @@
 [![报告格式](https://img.shields.io/badge/reports-JSON%20%7C%20SARIF%20%7C%20Markdown%20%7C%20Excel%20%7C%20PDF-informational)](#输出矩阵)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
-`agent-security-scanner` 是一个本地优先的 AI Agent、MCP 和 AI 编程工具安全扫描器。它用于扫描危险权限、明文 token、可疑 Shell 命令、过宽文件访问、GitHub Actions 自动化风险，以及常见 AI 编程工具配置风险。
+`agent-security-scanner` 是一个本地扫描的 AI Agent、MCP 和 AI 编程工具安全扫描器。它用于扫描危险权限、明文 token、可疑 Shell 命令、过宽文件访问、GitHub Actions 自动化风险，以及常见 AI 编程工具配置风险。
 
 工具默认只在本地读取和分析文件，不上传源码、密钥或扫描结果，适合用于个人项目、企业内部代码库、开源发布前检查、CI 安全门禁和 AI 编程工具配置审查。
 
