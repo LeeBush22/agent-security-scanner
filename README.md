@@ -688,17 +688,6 @@ Run tests:
 pytest
 ```
 
-Run release/preflight checks:
-
-```bash
-agent-scan doctor
-agent-scan rules --format markdown --output docs/RULES.md
-agent-scan rules --format markdown --output docs/RULES_zh.md --lang zh
-pytest
-```
-
-For the current release checklist, see `docs/RELEASE_CHECKLIST.md`. For release announcements, GitHub topics, and launch copy, see `docs/LAUNCH.md`.
-
 Run the CLI without installing:
 
 ```bash
